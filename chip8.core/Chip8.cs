@@ -67,7 +67,9 @@ namespace chip8.core
 
             //Decode and execute the op codes
             switch (op.Instruction) {
-                case 0x0000: {
+                
+                //Clear Screen / Return from subroutine
+                case 0x0: {
                     if (op.X == 0x0) {
                         if (op.N == 0x0) {
                             //Clear screen
@@ -79,6 +81,176 @@ namespace chip8.core
                     }
                     break;
                 }
+
+                //0x1NNNN - Jumps to address NNN.
+                case 0x1: {
+                    PC = (ushort)(op.NNN);
+                    break;
+                }
+
+                //0x2NNN - Calls subroutine at NNN.
+                case 0x2: {
+                    Stack.Push((ushort)(PC -2)); //You need to subtract 2 from the PC as its incremented above to the next position already when its reached here.
+                    PC = (ushort)(op.NNN);
+                    break;
+                }
+
+                //0x3XNN - Skips the next instruction if VX equals NN. (Usually the next instruction is a jump to skip a code block)
+                case 0x3: {
+                    if (V[op.X] == op.NN) {PC += 2;}
+                    break;
+                }
+
+                //0x4XNN - Skips the next instruction if VX doesn't equal NN. (Usually the next instruction is a jump to skip a code block)
+                case 0x4: {
+                    if (V[op.X] != op.NN) {PC += 2;}
+                    break;
+                }
+
+                //0x5XY0 - 	Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block)
+                case 0x5: {
+                    if (V[op.X] == op.Y) {PC += 2;}
+                    break;
+                }
+
+                //0x6XNN - 	Sets VX to NN.
+                case 0x6: {
+                    V[op.X] = op.NN;
+                    break;
+                }
+
+                //0x7XNN - Adds NN to VX. (Carry flag is not changed)
+                case 0x7: {
+                    V[op.X] += op.NN;
+                    break;
+                }
+                
+                //0x8XY? - BitWise / Math operations based on ?
+                case 0x8: {
+                    //Switch based on the last nibble of the opcode
+                    switch (op.N) {
+                        case 0x0: // 8XY0 - Sets VX to the value of VY.
+                            V[op.X] = V[op.Y];
+                            break;
+
+                        case 0x1: // 8XY1 - Sets VX to VX or VY. (Bitwise OR operation)
+                            V[op.X] |= V[op.Y];
+                            break;
+
+                        case 0x2: // 8XY2 - Sets VX to VX and VY. (Bitwise AND operation)
+                            V[op.X] &= V[op.Y];
+                            break;
+
+                        case 0x3: // 8XY3 - Sets VX to VX xor VY.
+                            V[op.X] ^= V[op.Y];
+                            break;
+
+                        case 0x4: // 8XY4 - Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
+                            if ((V[op.X] + V[op.Y]) > 255)
+                            {
+                                V[0xF] = 1;
+                            } else {
+                                V[0xF] = 0;
+                            }
+
+                            V[op.X] = (byte)(V[op.X] + V[op.Y]);
+                            break;
+
+                        case 0x5: // 8XY5 - VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+                            if(V[op.X] > V[op.Y])
+                            {
+                                V[0xF] = 1;
+                            } else {
+                                V[0xF] = 0;
+                            }
+
+                            V[op.X] = (byte)(V[op.X] - V[op.Y]);
+                            break;
+
+                        case 0x6: // 8XY6 - Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
+                            V[0xF] = (byte)(V[op.X] & 0x1);
+                            V[op.X] >>= 1;
+                            break;
+
+                        case 0x7: // 8XY7 - Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+                            if(V[op.Y] > V[op.X])
+                            {
+                                V[0xF] = 1;
+                            } else {
+                                V[0xF] = 0;
+                            }
+
+                            V[op.X] = (byte)(V[op.Y] - V[op.X]);
+                            break;
+
+                        case 0xE: // 8XYE - Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
+                            V[0xF] = (byte)(V[op.X] >> 7);
+                            V[op.X] <<= 1;
+                            break;
+                    }
+                    break;
+                }
+
+                //0x9XY0 - Skips the next instruction if VX doesn't equal VY. (Usually the next instruction is a jump to skip a code block)
+                case 0x9: {
+                    if (V[op.X] != V[op.Y]) { PC += 2;}
+                    break;
+                }
+
+                //0xANNN - Sets I to the address NNN.
+                case 0xA: {
+                    I = op.NNN;
+                    break;
+                }
+
+                //0xBNNN - Jumps to the address NNN plus V0.
+                case 0xB: {
+                    PC = (ushort)(op.NNN + V[0]);
+                    break;
+                }
+
+                //0xCXNN - Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
+                case 0xC: {
+                    V[op.X] = (byte)(new Random().Next(255) & op.NN);
+                    break;
+                }
+
+                //0xDXYN - Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
+                //         Each row of 8 pixels is read as bit-coded starting from memory location I; 
+                //         I value doesn’t change after the execution of this instruction. 
+                //         As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite 
+                //         is drawn, and to 0 if that doesn’t happen
+                case 0xD: {
+                    //TODO: This still needs to be implmented, requires the graphics interface to be fleshed out.
+                    break;
+                }
+
+                //0xEX?? - Handles key presses
+                case 0xE: {
+                    //TODO: This still needs to be implemented, requires the Input interface to be fleshed out.
+                    break;
+                }
+
+                case 0xF: {
+                    switch(op.N) {
+                        //0xFX07 - Sets VX to the value of the delay timer.
+                        case 0x7: { 
+                            //TODO: This still needs to be implemented, requires the delay timer
+                            break;
+                        }
+                        //0xF0A - A key press is awaited, and then stored in VX. (Blocking Operation. All instruction halted until next key event)
+                        case 0xA: { 
+                            //TODO: This still needs to be implemented, requires the Input interface to be fleshed out.
+                            break;
+                        }
+                        //0xFX15 - Sets the delay timer to VX.
+                        //0xFX18 - Sets the sound timer to VX.
+                        //0xFX1E - Adds VX to I
+                        //0xFX29 - Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                    }
+                    break;
+                }
+
             }
         }
 
