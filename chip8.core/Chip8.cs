@@ -244,9 +244,26 @@ namespace chip8.core
                             break;
                         }
                         //0xFX15 - Sets the delay timer to VX.
+                        case 0x15: {
+                            //TODO: this still needs to be implemented, requires the delay timer
+                            break;
+                        }
                         //0xFX18 - Sets the sound timer to VX.
+                        case 0x18: {
+                            //TODO: This still needs to be implmeneted, requires the delay timer & audio.
+                            break;
+                        }
                         //0xFX1E - Adds VX to I
+                        case 0x1E: {
+                            I += V[op.X];
+                            break;
+                        }
                         //0xFX29 - Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                        case 0x29:
+                        {
+                            //TODO: this still needs to be implemented, requires the graphics subsystem.
+                            break;
+                        }
                     }
                     break;
                 }
