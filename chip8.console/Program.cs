@@ -7,9 +7,19 @@ namespace chip8.console
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            Chip8 chp8 = new Chip8();
-            Console.WriteLine(chp8.ToString());
+            ConsoleAudio audio = new ConsoleAudio();
+            ConsoleInput input = new ConsoleInput();
+            ConsoleGraphics graphics = new ConsoleGraphics();
+
+            graphics.ClearScreen();
+            Chip8 chp8 = new Chip8(graphics,audio,input);
+
+            // //LoadROM
+
+            // while(true) {
+            //     chp8.Tick();
+            graphics.BlitScreen();
+            // }
         }
     }
 }

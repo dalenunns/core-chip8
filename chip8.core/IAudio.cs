@@ -1,4 +1,7 @@
-public interface IAudio
+namespace chip8.core
 {
-    void Beep();    
+    public interface IAudio
+    {
+        void Beep();
+    }
 }

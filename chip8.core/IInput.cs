@@ -1,5 +1,8 @@
-public interface IInput
+namespace chip8.core
 {
-    bool KeyPressed (byte key);
-    bool WaitForKey(out byte keyPressed);
+    public interface IInput
+    {
+        bool KeyPressed(byte key);
+        bool WaitForKey(out byte keyPressed);
+    }
 }
