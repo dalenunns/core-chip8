@@ -50,8 +50,27 @@ namespace chip8.core
             this.Graphics = graphics;
             this.Audio = audio;
             this.Input = input;
+        }
 
-            //TODO: Need to load ROM into memory and load fontset and init all the values.
+        //Init routines to setup the default values for registers etc, set the program counter and load the fonts.
+        //Needs to be called after loading a ROM image into memory
+        private void Init() {
+            I = 0;
+            StackPointer = 0;           
+            PC = START_PROGRAM_MEMORY;
+
+            DelayTimer = 0;
+            SoundTimer = 0;
+
+            ApplyFontSet(); //Load the fonts into memory
+        }
+
+        //Load the ROM byte array into the memory starting at START_PROGRAM_MEMORY (512) and then init the registers etc.
+        public void LoadROM(byte[] ROM) {
+            
+            Array.Copy(ROM,0,Memory,START_PROGRAM_MEMORY,ROM.Length);
+
+            Init();
         }
 
         //This needs to be called in a loop, it gets the next instruction from memory along with the associated data
@@ -76,7 +95,6 @@ namespace chip8.core
             //Decode and execute the op codes
             switch (op.Instruction)
             {
-
                 //Clear Screen / Return from subroutine
                 case 0x0:
                     {
@@ -255,14 +273,39 @@ namespace chip8.core
                 //         is drawn, and to 0 if that doesn’t happen
                 case 0xD:
                     {
-                        //TODO: This still needs to be implmented, requires the graphics interface to be fleshed out.
+                        byte[] sprite = new byte[op.N];
+                        Array.Copy(Memory, I, sprite, 0, op.N);
+
+                        bool pixelChanged = Graphics.DrawSprite(op.X, op.Y, op.N, sprite);
+
+                        if (pixelChanged)
+                        { V[0xF] = 1; }
+                        else { V[0xF] = 0; }
+
                         break;
                     }
 
                 //0xEX?? - Handles key presses
                 case 0xE:
                     {
-                        //TODO: This still needs to be implemented, requires the Input interface to be fleshed out.
+                        //EX9E - Skips the next instruction if the key stored in VX is pressed. (Usually the next instruction is a jump to skip a code block)
+                        if (op.N == 0xE)
+                        {
+                            //Check to see if the key stored in VX was pressed
+                            if (Input.KeyPressed(V[op.X]))
+                            {
+                                PC += 2; //Skip over the next instruction
+                            }
+                        }
+                        else
+                        {
+                            //EXA1	- Skips the next instruction if the key stored in VX isn't pressed. (Usually the next instruction is a jump to skip a code block)
+                            //Check to see if the key stored in VX wasn't pressed
+                            if (!Input.KeyPressed(V[op.X]))
+                            {
+                                PC += 2; //Skip over the next instruction
+                            }
+                        }
                         break;
                     }
 
@@ -279,7 +322,17 @@ namespace chip8.core
                             //0xF0A - A key press is awaited, and then stored in VX. (Blocking Operation. All instruction halted until next key event)
                             case 0xA:
                                 {
-                                    //TODO: This still needs to be implemented, requires the Input interface to be fleshed out.
+                                    byte keyPressed = 0x00;
+                                    //Check if a key has been pressed
+                                    if (Input.WaitForKey(out keyPressed))
+                                    {
+                                        //If a key has been pressed put it in VX
+                                        V[op.X] = keyPressed;
+                                    }
+                                    else
+                                    {
+                                        PC -= 2; //If no key was pressed move the program counter one instruction back so it keep repeating this instruction.
+                                    }
                                     break;
                                 }
                             //0xFX15 - Sets the delay timer to VX.
@@ -336,7 +389,12 @@ namespace chip8.core
                         }
                         break;
                     }
+            }
 
+            if (DelayTimer > 0) { DelayTimer--; }
+            if (SoundTimer > 0) {
+                SoundTimer--;
+                if (SoundTimer == 0) {Audio.Beep();}
             }
         }
 
