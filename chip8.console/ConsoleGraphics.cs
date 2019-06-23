@@ -25,13 +25,12 @@ namespace chip8.console
             for (int height = 0; height < spriteHeight; height++)
             {
                 byte spriteLine = sprite[height];
-
+                        int posY = y + height;
                 for (int width = 0; width < 8; width++)
                 {
                     if ((spriteLine & (0x80 >> width)) != 0)
                     {
                         int posX = x + width;
-                        int posY = y + width;
 
                         if (screen[posX, posY]) { pixelChanged = true; }
                         screen[posX, posY] ^= true;
@@ -56,7 +55,7 @@ namespace chip8.console
                         }
                         else
                         {
-                            Console.Write("0");
+                            Console.Write(" ");
                         }
                     }
 

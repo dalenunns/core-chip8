@@ -7,7 +7,7 @@ namespace chip8.core
     public class Chip8
     {
         private const int MEMORY_SIZE = 4096; //Chip8 machines had 4096bytes of memory.
-        private const int START_PROGRAM_MEMORY = 512; //The first 512bytes of memory contained the chip8 interpreter + fonts etc.
+        private const int START_PROGRAM_MEMORY = 0x200; //The first 512bytes of memory contained the chip8 interpreter + fonts etc.
         private const int STACK_SIZE = 16;
 
         //Graphics, Audio and Input are abstracted out so that we can easily port this core emulation engine to other platforms.
@@ -37,11 +37,11 @@ namespace chip8.core
             public ushort OpCode;
             public ushort NNN;
             public byte NN, X, Y, N;
-            public byte Instruction;
+            public ushort Instruction;
 
             public override string ToString()
             {
-                return $"{OpCode:X4} (X: {X:X}, Y: {Y:X}, N: {N:X}, NN: {NN:X2}, NNN: {NNN:X3})";
+                return $"{OpCode:X4} Instruction: {Instruction:X2} (X: {X:X}, Y: {Y:X}, N: {N:X}, NN: {NN:X2}, NNN: {NNN:X3})";
             }
         }
 
@@ -84,13 +84,18 @@ namespace chip8.core
             var op = new OpCodeData()
             {
                 OpCode = opCode,
-                Instruction = (byte)(opCode & 0xF000),
+                Instruction = (ushort)((opCode & 0xF000) >> 12),
                 NNN = (ushort)(opCode & 0x0FFF),
                 NN = (byte)(opCode & 0x00FF),
                 N = (byte)(opCode & 0x00F),
                 X = (byte)((opCode & 0x0F00) >> 8),
                 Y = (byte)((opCode & 0x00F0) >> 4)
             };
+
+            //string debug = op.ToString();  
+                
+            //System.Diagnostics.Debug.WriteLine($"{test:X} - {test} - 4:{test >> 4:X} - 8:{test >> 8:X} 12:{test >> 12:X}");
+            //System.Diagnostics.Debug.WriteLine(op.ToString());
 
             //Decode and execute the op codes
             switch (op.Instruction)
@@ -146,7 +151,7 @@ namespace chip8.core
                 //0x5XY0 - 	Skips the next instruction if VX equals VY. (Usually the next instruction is a jump to skip a code block)
                 case 0x5:
                     {
-                        if (V[op.X] == op.Y) { PC += 2; }
+                        if (V[op.X] == V[op.Y]) { PC += 2; }
                         break;
                     }
 
@@ -276,7 +281,9 @@ namespace chip8.core
                         byte[] sprite = new byte[op.N];
                         Array.Copy(Memory, I, sprite, 0, op.N);
 
-                        bool pixelChanged = Graphics.DrawSprite(op.X, op.Y, op.N, sprite);
+                        bool pixelChanged = Graphics.DrawSprite(V[op.X], V[op.Y], op.N, sprite);
+
+                        //System.Diagnostics.Debug.WriteLine($"X:{V[op.X]} Y:{V[op.Y]}");
 
                         if (pixelChanged)
                         { V[0xF] = 1; }
@@ -311,16 +318,16 @@ namespace chip8.core
 
                 case 0xF:
                     {
-                        switch (op.N)
+                        switch (op.NN)
                         {
                             //0xFX07 - Sets VX to the value of the delay timer.
-                            case 0x7:
+                            case 0x07:
                                 {
                                     V[op.X] = DelayTimer;
                                     break;
                                 }
                             //0xF0A - A key press is awaited, and then stored in VX. (Blocking Operation. All instruction halted until next key event)
-                            case 0xA:
+                            case 0x0A:
                                 {
                                     byte keyPressed = 0x00;
                                     //Check if a key has been pressed
@@ -389,6 +396,10 @@ namespace chip8.core
                         }
                         break;
                     }
+                    default:
+                    {
+                        throw new Exception("Unknown OpCode: " +opCode.ToString());
+                    }
             }
 
             if (DelayTimer > 0) { DelayTimer--; }
@@ -429,7 +440,12 @@ namespace chip8.core
 
         public override string ToString()
         {
-            return "Hello World";
+            string s = $"PC:{PC} I:{I} ";
+            for (int i = 0; i<16; i++) {
+                s+= $"v{i:X}={V[i]:X} ";
+            }
+
+            return s;
         }
 
     }
