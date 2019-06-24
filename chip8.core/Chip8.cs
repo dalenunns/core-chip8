@@ -24,10 +24,10 @@ namespace chip8.core
         private ushort I { get; set; } = 0;
         //Program counter
         private ushort PC { get; set; } = 0;
+        //Stack
         private Stack<ushort> Stack { get; set; } = new Stack<ushort>(STACK_SIZE);
         private ushort StackPointer { get; set; }
-
-
+        //Timers
         private byte DelayTimer { get; set; } = 0;
         private byte SoundTimer { get; set; } = 0;
 
@@ -91,11 +91,6 @@ namespace chip8.core
                 X = (byte)((opCode & 0x0F00) >> 8),
                 Y = (byte)((opCode & 0x00F0) >> 4)
             };
-
-            //string debug = op.ToString();  
-                
-            //System.Diagnostics.Debug.WriteLine($"{test:X} - {test} - 4:{test >> 4:X} - 8:{test >> 8:X} 12:{test >> 12:X}");
-            //System.Diagnostics.Debug.WriteLine(op.ToString());
 
             //Decode and execute the op codes
             switch (op.Instruction)
@@ -176,22 +171,27 @@ namespace chip8.core
                         switch (op.N)
                         {
                             case 0x0: // 8XY0 - Sets VX to the value of VY.
+                            {
                                 V[op.X] = V[op.Y];
                                 break;
-
+                            }
                             case 0x1: // 8XY1 - Sets VX to VX or VY. (Bitwise OR operation)
+                            {
                                 V[op.X] |= V[op.Y];
                                 break;
-
+                            }
                             case 0x2: // 8XY2 - Sets VX to VX and VY. (Bitwise AND operation)
+                            {
                                 V[op.X] &= V[op.Y];
                                 break;
-
+                            }
                             case 0x3: // 8XY3 - Sets VX to VX xor VY.
+                            {
                                 V[op.X] ^= V[op.Y];
                                 break;
-
+                            }
                             case 0x4: // 8XY4 - Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
+                            {
                                 if ((V[op.X] + V[op.Y]) > 255)
                                 {
                                     V[0xF] = 1;
@@ -203,8 +203,9 @@ namespace chip8.core
 
                                 V[op.X] = (byte)(V[op.X] + V[op.Y]);
                                 break;
-
+                            }
                             case 0x5: // 8XY5 - VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+                            {
                                 if (V[op.X] > V[op.Y])
                                 {
                                     V[0xF] = 1;
@@ -216,13 +217,15 @@ namespace chip8.core
 
                                 V[op.X] = (byte)(V[op.X] - V[op.Y]);
                                 break;
-
+                            }
                             case 0x6: // 8XY6 - Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
+                            {
                                 V[0xF] = (byte)(V[op.X] & 0x1);
                                 V[op.X] >>= 1;
                                 break;
-
+                            }
                             case 0x7: // 8XY7 - Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+                            {
                                 if (V[op.Y] > V[op.X])
                                 {
                                     V[0xF] = 1;
@@ -234,11 +237,13 @@ namespace chip8.core
 
                                 V[op.X] = (byte)(V[op.Y] - V[op.X]);
                                 break;
-
+                            }
                             case 0xE: // 8XYE - Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
+                            {
                                 V[0xF] = (byte)(V[op.X] >> 7);
                                 V[op.X] <<= 1;
                                 break;
+                            }
                         }
                         break;
                     }
@@ -282,8 +287,6 @@ namespace chip8.core
                         Array.Copy(Memory, I, sprite, 0, op.N);
 
                         bool pixelChanged = Graphics.DrawSprite(V[op.X], V[op.Y], op.N, sprite);
-
-                        //System.Diagnostics.Debug.WriteLine($"X:{V[op.X]} Y:{V[op.Y]}");
 
                         if (pixelChanged)
                         { V[0xF] = 1; }

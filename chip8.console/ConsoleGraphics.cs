@@ -51,7 +51,7 @@ namespace chip8.console
                         Console.SetCursorPosition(x, y);
                         if (screen[x, y])
                         {
-                            Console.Write("X");
+                            Console.Write("█");
                         }
                         else
                         {

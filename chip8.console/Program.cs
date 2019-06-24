@@ -9,31 +9,47 @@ namespace chip8.console
     {
         static void Main(string[] args)
         {
-            ConsoleAudio audio = new ConsoleAudio();
-            ConsoleInput input = new ConsoleInput();
-            ConsoleGraphics graphics = new ConsoleGraphics();
-
-            graphics.ClearScreen();
-            Chip8 chp8 = new Chip8(graphics, audio, input);
-
-            byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/Fishie.ch8");
-            // //LoadROM
-            chp8.LoadROM(rom);
-
-            Console.WriteLine("Starting Emulator");
-
-            try
+            if (args.Length == 0)
             {
-                while (true)
-                {
-                    chp8.Tick();
-                    graphics.BlitScreen();
-              //      System.Diagnostics.Debug.WriteLine(chp8.ToString());
-                }
+                Console.WriteLine("Error no ROM file specified");
+                return;
             }
-            catch (Exception e)
+            else
             {
+                if (!File.Exists(args[0]))
+                {
+                    Console.WriteLine($"Error ROM file ({args[0]}) not found.");
+                }
+                else
+                {
+                    ConsoleAudio audio = new ConsoleAudio();
+                    ConsoleInput input = new ConsoleInput();
+                    ConsoleGraphics graphics = new ConsoleGraphics();
 
+                    graphics.ClearScreen();
+                    Chip8 chp8 = new Chip8(graphics, audio, input);
+
+                    //byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/Fishie.ch8");
+                    byte[] rom = LoadROMFile(args[0]);
+                    // //LoadROM
+                    chp8.LoadROM(rom);
+
+                    Console.WriteLine("Starting Emulator");
+
+                    try
+                    {
+                        while (true)
+                        {
+                            chp8.Tick();
+                            graphics.BlitScreen();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        throw;
+                    }
+
+                }
             }
         }
 
