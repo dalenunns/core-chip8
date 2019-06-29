@@ -30,7 +30,7 @@ namespace chip8.core
         //Timers
         private byte DelayTimer { get; set; } = 0;
         private byte SoundTimer { get; set; } = 0;
-
+        private DateTime LastTimerEvent;
         //A struct to hold the Opcode + data from memory
         private struct OpCodeData
         {
@@ -54,21 +54,24 @@ namespace chip8.core
 
         //Init routines to setup the default values for registers etc, set the program counter and load the fonts.
         //Needs to be called after loading a ROM image into memory
-        private void Init() {
+        private void Init()
+        {
             I = 0;
-            StackPointer = 0;           
+            StackPointer = 0;
             PC = START_PROGRAM_MEMORY;
 
             DelayTimer = 0;
             SoundTimer = 0;
+            LastTimerEvent = DateTime.Now;
 
             ApplyFontSet(); //Load the fonts into memory
         }
 
         //Load the ROM byte array into the memory starting at START_PROGRAM_MEMORY (512) and then init the registers etc.
-        public void LoadROM(byte[] ROM) {
-            
-            Array.Copy(ROM,0,Memory,START_PROGRAM_MEMORY,ROM.Length);
+        public void LoadROM(byte[] ROM)
+        {
+
+            Array.Copy(ROM, 0, Memory, START_PROGRAM_MEMORY, ROM.Length);
 
             Init();
         }
@@ -171,79 +174,79 @@ namespace chip8.core
                         switch (op.N)
                         {
                             case 0x0: // 8XY0 - Sets VX to the value of VY.
-                            {
-                                V[op.X] = V[op.Y];
-                                break;
-                            }
+                                {
+                                    V[op.X] = V[op.Y];
+                                    break;
+                                }
                             case 0x1: // 8XY1 - Sets VX to VX or VY. (Bitwise OR operation)
-                            {
-                                V[op.X] |= V[op.Y];
-                                break;
-                            }
+                                {
+                                    V[op.X] |= V[op.Y];
+                                    break;
+                                }
                             case 0x2: // 8XY2 - Sets VX to VX and VY. (Bitwise AND operation)
-                            {
-                                V[op.X] &= V[op.Y];
-                                break;
-                            }
+                                {
+                                    V[op.X] &= V[op.Y];
+                                    break;
+                                }
                             case 0x3: // 8XY3 - Sets VX to VX xor VY.
-                            {
-                                V[op.X] ^= V[op.Y];
-                                break;
-                            }
+                                {
+                                    V[op.X] ^= V[op.Y];
+                                    break;
+                                }
                             case 0x4: // 8XY4 - Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
-                            {
-                                if ((V[op.X] + V[op.Y]) > 255)
                                 {
-                                    V[0xF] = 1;
-                                }
-                                else
-                                {
-                                    V[0xF] = 0;
-                                }
+                                    if ((V[op.X] + V[op.Y]) > 255)
+                                    {
+                                        V[0xF] = 1;
+                                    }
+                                    else
+                                    {
+                                        V[0xF] = 0;
+                                    }
 
-                                V[op.X] = (byte)(V[op.X] + V[op.Y]);
-                                break;
-                            }
+                                    V[op.X] = (byte)(V[op.X] + V[op.Y]);
+                                    break;
+                                }
                             case 0x5: // 8XY5 - VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-                            {
-                                if (V[op.X] > V[op.Y])
                                 {
-                                    V[0xF] = 1;
-                                }
-                                else
-                                {
-                                    V[0xF] = 0;
-                                }
+                                    if (V[op.X] > V[op.Y])
+                                    {
+                                        V[0xF] = 1;
+                                    }
+                                    else
+                                    {
+                                        V[0xF] = 0;
+                                    }
 
-                                V[op.X] = (byte)(V[op.X] - V[op.Y]);
-                                break;
-                            }
+                                    V[op.X] = (byte)(V[op.X] - V[op.Y]);
+                                    break;
+                                }
                             case 0x6: // 8XY6 - Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
-                            {
-                                V[0xF] = (byte)(V[op.X] & 0x1);
-                                V[op.X] >>= 1;
-                                break;
-                            }
+                                {
+                                    V[0xF] = (byte)(V[op.X] & 0x1);
+                                    V[op.X] >>= 1;
+                                    break;
+                                }
                             case 0x7: // 8XY7 - Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-                            {
-                                if (V[op.Y] > V[op.X])
                                 {
-                                    V[0xF] = 1;
-                                }
-                                else
-                                {
-                                    V[0xF] = 0;
-                                }
+                                    if (V[op.Y] > V[op.X])
+                                    {
+                                        V[0xF] = 1;
+                                    }
+                                    else
+                                    {
+                                        V[0xF] = 0;
+                                    }
 
-                                V[op.X] = (byte)(V[op.Y] - V[op.X]);
-                                break;
-                            }
+                                    V[op.X] = (byte)(V[op.Y] - V[op.X]);
+                                    break;
+                                }
                             case 0xE: // 8XYE - Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
-                            {
-                                V[0xF] = (byte)(V[op.X] >> 7);
-                                V[op.X] <<= 1;
-                                break;
-                            }
+                                {
+                                    V[0xF] = (byte)(V[op.X] >> 7);
+                                    V[op.X] <<= 1;
+                                    break;
+                                }
                         }
                         break;
                     }
@@ -399,16 +402,22 @@ namespace chip8.core
                         }
                         break;
                     }
-                    default:
+                default:
                     {
-                        throw new Exception("Unknown OpCode: " +opCode.ToString());
+                        throw new Exception("Unknown OpCode: " + opCode.ToString());
                     }
             }
 
-            if (DelayTimer > 0) { DelayTimer--; }
-            if (SoundTimer > 0) {
-                SoundTimer--;
-                if (SoundTimer == 0) {Audio.Beep();}
+            //Run the countdown timer code every 60hz or every 16ms +/- 
+            if (DateTime.Now.Subtract(LastTimerEvent).Milliseconds >= 16)
+            {
+                if (DelayTimer > 0) { DelayTimer--; }
+                if (SoundTimer > 0)
+                {
+                    SoundTimer--;
+                    if (SoundTimer == 0) { Audio.Beep(); }
+                }
+                LastTimerEvent = DateTime.Now;
             }
         }
 
@@ -444,8 +453,9 @@ namespace chip8.core
         public override string ToString()
         {
             string s = $"PC:{PC} I:{I} ";
-            for (int i = 0; i<16; i++) {
-                s+= $"v{i:X}={V[i]:X} ";
+            for (int i = 0; i < 16; i++)
+            {
+                s += $"v{i:X}={V[i]:X} ";
             }
 
             return s;
