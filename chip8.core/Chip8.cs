@@ -6,9 +6,9 @@ namespace chip8.core
 {
     public class Chip8
     {
-        private const int MEMORY_SIZE = 4096; //Chip8 machines had 4096bytes of memory.
-        private const int START_PROGRAM_MEMORY = 0x200; //The first 512bytes of memory contained the chip8 interpreter + fonts etc.
-        private const int STACK_SIZE = 16;
+        public const int MEMORY_SIZE = 4096; //Chip8 machines had 4096bytes of memory.
+        public const int START_PROGRAM_MEMORY = 0x200; //The first 512bytes of memory contained the chip8 interpreter + fonts etc.
+        public const int STACK_SIZE = 16;
 
         //Graphics, Audio and Input are abstracted out so that we can easily port this core emulation engine to other platforms.
         private IGraphics Graphics;
@@ -16,23 +16,23 @@ namespace chip8.core
         private IInput Input;
 
         //Chip8 Memory - 4096bytes in size.
-        private byte[] Memory { get; set; } = new byte[MEMORY_SIZE];
+        public byte[] Memory { get; set; } = new byte[MEMORY_SIZE];
         //CPU Registers V0-VF 
         // (VF doubles as a flag for some instructions. Carry flag in addition)
-        private byte[] V { get; set; } = new byte[16];
+        public byte[] V { get; set; } = new byte[16];
         //Index Register
-        private ushort I { get; set; } = 0;
+        public ushort I { get; set; } = 0;
         //Program counter
-        private ushort PC { get; set; } = 0;
+        public ushort PC { get; set; } = 0;
         //Stack
-        private Stack<ushort> Stack { get; set; } = new Stack<ushort>(STACK_SIZE);
-        private ushort StackPointer { get; set; }
+        public Stack<ushort> Stack { get; set; } = new Stack<ushort>(STACK_SIZE);
+        public ushort StackPointer { get; set; }
         //Timers
-        private byte DelayTimer { get; set; } = 0;
-        private byte SoundTimer { get; set; } = 0;
+        public byte DelayTimer { get; set; } = 0;
+        public byte SoundTimer { get; set; } = 0;        
         private DateTime LastTimerEvent;
         //A struct to hold the Opcode + data from memory
-        private struct OpCodeData
+        public struct OpCodeData
         {
             public ushort OpCode;
             public ushort NNN;
