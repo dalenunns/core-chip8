@@ -85,6 +85,7 @@ namespace chip8.gtkskia
                         graphicsDumpWindow.SetGraphics(graphics.Screen);
                         memoryDumpWindow.SetMemory(chp8.Memory);
                         graphics.ScreenChanged = false;
+                        debuggerWindow.SetWatchValues(chp8.PC,chp8.I,chp8.V,chp8.DelayTimer,chp8.SoundTimer);
                     }
 
                 });
