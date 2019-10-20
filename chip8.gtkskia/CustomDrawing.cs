@@ -11,9 +11,11 @@ namespace chip8.gtkskia
     {
         bool[,] screen = new bool[64, 32];
 
-        public bool[,] ScreenData {
+        public bool[,] ScreenData
+        {
             get => screen;
-            set {
+            set
+            {
                 screen = value;
                 this.QueueDraw();
             }
@@ -30,7 +32,7 @@ namespace chip8.gtkskia
                 using (var skSurface = SKSurface.Create(bitmap.Info.Width, bitmap.Info.Height, SKColorType.Rgb888x, SKAlphaType.Premul, bitmap.GetPixels(out len), bitmap.Info.RowBytes))
                 {
                     var canvas = skSurface.Canvas;
-                    canvas.Clear(SKColors.White);
+                    canvas.Clear(SKColors.Black);
 
                     using (var paint = new SKPaint())
                     {
@@ -39,17 +41,13 @@ namespace chip8.gtkskia
                             {
                                 if (screen[x, y])
                                 {
-                                    paint.Color = SKColors.Green;
-                                    canvas.DrawRect(x*10,y*10,10,10, paint);
-
-                                    //canvas.DrawPoint(x,y,SKColors.Black);
+                                    paint.Color = SKColors.White;
+                                    canvas.DrawRect(x * 10, y * 10, 10, 10, paint);
                                 }
                                 else
                                 {
-                                    paint.Color = SKColors.Yellow;
-                                    canvas.DrawRect(x*10,y*10,10,10, paint);
-
-                                    //canvas.DrawPoint(x,y,SKColors.White);
+                                    paint.Color = SKColors.Black;
+                                    canvas.DrawRect(x * 10, y * 10, 10, 10, paint);
                                 }
                             }
                     }
@@ -58,13 +56,12 @@ namespace chip8.gtkskia
                         bitmap.GetPixels(out len),
                         Cairo.Format.Argb32,
                         bitmap.Width, bitmap.Height,
-                        bitmap.Width * 4) ) {
-
-
-                    surface.MarkDirty();
-                    cr.SetSourceSurface(surface, 0, 0);
-                    cr.Paint();
-                        }
+                        bitmap.Width * 4))
+                    {
+                        surface.MarkDirty();
+                        cr.SetSourceSurface(surface, 0, 0);
+                        cr.Paint();
+                    }
                 }
             }
 

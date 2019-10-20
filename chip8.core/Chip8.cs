@@ -127,7 +127,7 @@ namespace chip8.core
                 //0x2NNN - Calls subroutine at NNN.
                 case 0x2:
                     {
-                        Stack.Push((ushort)(PC - 2)); //You need to subtract 2 from the PC as its incremented above to the next position already when its reached here.
+                        Stack.Push((ushort)(PC )); //You need to subtract 2 from the PC as its incremented above to the next position already when its reached here.
                         PC = (ushort)(op.NNN);
                         break;
                     }

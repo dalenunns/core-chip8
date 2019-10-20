@@ -13,8 +13,8 @@ namespace chip8.gtkskia.Windows
 
         private TextView watchTextView;
         private TextBuffer watchBuffer = new TextBuffer(new TextTagTable());
+        private ScrolledWindow scrollWindow;
 
-        
         public DebuggerWindow(string title) : base(title)
         {
             Gdk.RGBA black = new Gdk.RGBA();
@@ -23,44 +23,55 @@ namespace chip8.gtkskia.Windows
             this.SetSizeRequest(640, 480);
 
             var hb = new HeaderBar();
-            var hPaned = new HPaned();           
-           
+            var hPaned = new HPaned();
+
             #region Disassembly Text View Setup
 
             disassemblyTextView = new TextView(disassemblyBuffer);
             disassemblyTextView.Editable = false;
             disassemblyTextView.Monospace = true;
-            var scrollWindow = new ScrolledWindow();
+            
+            scrollWindow = new ScrolledWindow();
             scrollWindow.BorderWidth = 5;
             scrollWindow.ShadowType = ShadowType.In;
             scrollWindow.Add(disassemblyTextView);
 
-            CreateTags(disassemblyBuffer);           
-            
+            CreateTags(disassemblyBuffer);
+
             //hPaned.Add1(scrollWindow);
-            hPaned.Pack1(scrollWindow,true,false);
-            
+            hPaned.Pack1(scrollWindow, true, false);
+
             #endregion
 
-            var box = new Box(Orientation.Vertical,6);
-            
+            var box = new Box(Orientation.Vertical, 6);
+
             var buttonBox = new Box(Orientation.Horizontal, 6);
             var pauseButton = new Button();
-            pauseButton.Label = "pause";
+            pauseButton.Clicked += delegate (object obj, EventArgs args) {
+                Program.DebugControl(Program.DebugOptions.Pause);
+            };
+            pauseButton.Label = "Pause";
+            
             var stepButton = new Button();
-            stepButton.Label = "step";
+            stepButton.Clicked += delegate (object obj, EventArgs args) {
+                Program.DebugControl(Program.DebugOptions.Step);
+            };
+            stepButton.Label = "Step";
             var playButton = new Button();
-            playButton.Label = "play";
+            playButton.Clicked += delegate (object obj, EventArgs args) {
+                Program.DebugControl(Program.DebugOptions.Play);
+            };
+            playButton.Label = "Play";
 
-            buttonBox.PackStart(pauseButton,false,true,2);
-            buttonBox.PackStart(stepButton,false,true,2);
-            buttonBox.PackStart(playButton,false,true,2);
+            buttonBox.PackStart(pauseButton, false, true, 2);
+            buttonBox.PackStart(stepButton, false, true, 2);
+            buttonBox.PackStart(playButton, false, true, 2);
 
-            box.PackStart(buttonBox,false,false,2);
+            box.PackStart(buttonBox, false, false, 2);
 
             var watchLabel = new Label("Watch");
 
-            box.PackStart(watchLabel, false,false,2);
+            box.PackStart(watchLabel, false, false, 2);
 
             watchTextView = new TextView(watchBuffer);
             watchTextView.Editable = false;
@@ -68,11 +79,12 @@ namespace chip8.gtkskia.Windows
 
             CreateTags(watchBuffer);
 
-            box.PackStart(watchTextView,true,true,2);
+            box.PackStart(watchTextView, true, true, 2);
 
-            hPaned.Pack2(box,false,false);
+            hPaned.Pack2(box, false, false);
 
             Add(hPaned);
+
         }
 
         private void CreateTags(TextBuffer buffer)
@@ -98,9 +110,6 @@ namespace chip8.gtkskia.Windows
             addressBgColour.Parse("#2F3129");
             Gdk.RGBA backgroundColour = new Gdk.RGBA();
             backgroundColour.Parse("#272822");
-
-
-
 
             TextTag tag = new TextTag("keyword");
             tag.Weight = Pango.Weight.Normal;
@@ -147,39 +156,56 @@ namespace chip8.gtkskia.Windows
             buffer.TagTable.Add(tag);
         }
 
-        public void SetWatchValues(ushort PC, ushort I, byte[] V, byte DelayTimer, byte SoundTimer) {
+        public void HighlightOpCode(ushort address) {
+            int location = ((int)address - chip8.core.Chip8.START_PROGRAM_MEMORY) /2;
+
+            TextIter line = disassemblyBuffer.GetIterAtLine(location);
+            TextIter eline = disassemblyBuffer.GetIterAtLine(location);
+            eline.ForwardToLineEnd();
+            disassemblyBuffer.SelectRange(line,eline);
+
+            var lineLocation = disassemblyTextView.GetIterLocation(line);
+            if ( (lineLocation.Top < disassemblyTextView.VisibleRect.Top) || (lineLocation.Bottom > disassemblyTextView.VisibleRect.Bottom)) {
+              disassemblyTextView.ScrollToIter(line,0,true,0,0);  
+            }
+        }
+
+        public void SetWatchValues(ushort PC, ushort I, byte[] V, byte DelayTimer, byte SoundTimer)
+        {            
             int LINE_LENGTH = 30;
+
+            HighlightOpCode(PC);
 
             watchBuffer.Clear();
             TextIter position = watchBuffer.EndIter;
 
             watchBuffer.InsertWithTagsByName(ref position, $" PC", "variable");
             watchBuffer.InsertWithTagsByName(ref position, $" 0x{PC:x4}", "constant");
-            watchBuffer.InsertWithTagsByName(ref position, $" //Program Counter", "comment");                
+            watchBuffer.InsertWithTagsByName(ref position, $" //Program Counter", "comment");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
 
             watchBuffer.InsertWithTagsByName(ref position, $" I", "variable");
             watchBuffer.InsertWithTagsByName(ref position, $" 0x{I:x4}", "constant");
-            watchBuffer.InsertWithTagsByName(ref position, $" //b{Convert.ToString(I,2).PadLeft(8,'0')}", "comment");
+            watchBuffer.InsertWithTagsByName(ref position, $" //b{Convert.ToString(I, 2).PadLeft(8, '0')}", "comment");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
 
             for (int i = 0; i < V.Length; i++)
             {
                 watchBuffer.InsertWithTagsByName(ref position, $"  V{i:x1}", "variable");
-                watchBuffer.InsertWithTagsByName(ref position, $" 0x{V[i]:x2}", "constant");                
-                watchBuffer.InsertWithTagsByName(ref position, $" //b{Convert.ToString(V[i],2).PadLeft(8,'0')}", "comment");
+                watchBuffer.InsertWithTagsByName(ref position, $" 0x{V[i]:x2}", "constant");
+                watchBuffer.InsertWithTagsByName(ref position, $" //b{Convert.ToString(V[i], 2).PadLeft(8, '0')}", "comment");
                 watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
             }
 
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
             watchBuffer.InsertWithTagsByName(ref position, $" DelayTimer", "variable");
             watchBuffer.InsertWithTagsByName(ref position, $" {DelayTimer}", "constant");
-            watchBuffer.InsertWithTagsByName(ref position, $" //0x{DelayTimer:x2}", "comment");                
+            watchBuffer.InsertWithTagsByName(ref position, $" //0x{DelayTimer:x2}", "comment");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
             watchBuffer.InsertWithTagsByName(ref position, $" SoundTimer", "variable");
             watchBuffer.InsertWithTagsByName(ref position, $" {SoundTimer}", "constant");
-            watchBuffer.InsertWithTagsByName(ref position, $" //0x{SoundTimer:x2}", "comment");                
+            watchBuffer.InsertWithTagsByName(ref position, $" //0x{SoundTimer:x2}", "comment");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
         }
 
@@ -206,7 +232,7 @@ namespace chip8.gtkskia.Windows
                     Y = (byte)((opCode & 0x00F0) >> 4)
                 };
 
-                DissasembleOpCode(disassemblyBuffer, ref position, op, PC);                
+                DissasembleOpCode(disassemblyBuffer, ref position, op, PC);
             }
         }
 
