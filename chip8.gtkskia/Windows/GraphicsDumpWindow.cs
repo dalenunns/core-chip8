@@ -6,18 +6,21 @@ namespace chip8.gtkskia.Windows
 {
     public class GraphicsDumpWindow : Window
     {
-        private TextView graphicsTextView;
-        private TextBuffer graphicsDumpBuffer = new TextBuffer(new TextTagTable());
+        private readonly TextView graphicsTextView;
+        private readonly TextBuffer graphicsDumpBuffer = new TextBuffer(new TextTagTable());
 
         public GraphicsDumpWindow(string title) : base(title)
         {
             this.SetSizeRequest(640,480);
 
-            graphicsTextView = new TextView(graphicsDumpBuffer);
-            graphicsTextView.Editable = false;
-            graphicsTextView.Monospace = true;            
-            Add(graphicsTextView);           
+            graphicsTextView = new TextView(graphicsDumpBuffer)
+            {
+                Editable = false,
+                Monospace = true
+            };
+
             CreateTags(graphicsDumpBuffer);
+            Add(graphicsTextView);                       
         }      
 
         private void CreateTags(TextBuffer buffer)
@@ -27,16 +30,20 @@ namespace chip8.gtkskia.Windows
             Gdk.RGBA white = new Gdk.RGBA();
             white.Parse("#ffffff");
 
-            TextTag tag = new TextTag("off");
-            tag.Weight = Pango.Weight.Normal;
-            tag.BackgroundRgba = black;
-            tag.ForegroundRgba = white;            
+            TextTag tag = new TextTag("off")
+            {
+                Weight = Pango.Weight.Normal,
+                BackgroundRgba = black,
+                ForegroundRgba = white
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("on");
-            tag.Weight = Pango.Weight.Normal;
-            tag.BackgroundRgba = white;
-            tag.ForegroundRgba = black;            
+            tag = new TextTag("on")
+            {
+                Weight = Pango.Weight.Normal,
+                BackgroundRgba = white,
+                ForegroundRgba = black
+            };
             buffer.TagTable.Add(tag);
         }
 
@@ -44,8 +51,6 @@ namespace chip8.gtkskia.Windows
       {
             graphicsDumpBuffer.Clear();
             TextIter position = graphicsDumpBuffer.EndIter;
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
             for (int y = 0; y < 32; y++)
             {

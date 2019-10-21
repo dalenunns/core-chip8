@@ -6,7 +6,7 @@ namespace chip8.gtkskia.Services
 {
     public class Graphics : IGraphics
     {
-        private bool[,] screen = new bool[64, 32];
+        private readonly bool[,] screen = new bool[64, 32];
         private bool updateScreen = false;
 
         public bool[,] Screen  {
@@ -40,8 +40,10 @@ namespace chip8.gtkskia.Services
                     {
                         int posX = x + width;
 
+                        if ((posX < 64) && (posY < 32)) {
                         if (screen[posX, posY]) { pixelChanged = true; }
                         screen[posX, posY] ^= true;
+                        }
                     }
                 }
             }

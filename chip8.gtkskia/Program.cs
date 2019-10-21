@@ -17,11 +17,12 @@ namespace chip8.gtkskia
         static Graphics graphics;
         static Chip8 chp8;
 
-        static CustomDrawing darea;
+        //static CustomDrawing darea;
 
         static Windows.GraphicsDumpWindow graphicsDumpWindow;
         static Windows.MemoryDumpWindow memoryDumpWindow;
         static Windows.DebuggerWindow debuggerWindow;
+        static EmulatorWindow emulatorWindow;
 
         public enum DebugOptions
         {
@@ -35,30 +36,83 @@ namespace chip8.gtkskia
 
         static void Main(string[] args)
         {
-            //Graphics Buffer Dump Window
-            //Memory Hex Dump (with colour highlighting)
-            //Debug Window (hexdump, disassembly, registers etc)
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Error no ROM file specified");
+                return;
+            }
+            else
+            {
+                bool debugMode = false;
+                int filePathIndex = 0;
 
-            Gtk.Application.Init();
+                if (args[0].ToUpper() == "-DEBUG")
+                {
+                    debugMode = true;
+                    filePathIndex = 1;
+                }
 
-            audio = new Audio();
-            input = new Input();
-            graphics = new Graphics();
+                if (!File.Exists(args[filePathIndex]))
+                {
+                    Console.WriteLine($"Error ROM file ({args[filePathIndex]}) not found.");
+                }
+                else
+                {
+                    audio = new Audio();
+                    input = new Input();
+                    graphics = new Graphics();
 
-            chp8 = new Chip8(graphics, audio, input);
+                    chp8 = new Chip8(graphics, audio, input);
 
-            //byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/chip8.roms/IBMLogo.ch8");
-            byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/chip8.roms/PONG");
-            //LoadROM
-            chp8.LoadROM(rom);
+                    //byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/chip8.roms/PONG");
+                    byte[] rom = LoadROMFile(args[filePathIndex]);
+                    //LoadROM
+                    chp8.LoadROM(rom);
 
+                    try
+                    {
+                        Gtk.Application.Init();
+                        emulatorWindow = new EmulatorWindow("Core Chip8");
+                        emulatorWindow.DeleteEvent += delegate
+                        {
+                            KILL_EMULATION = true;
+                            Gtk.Application.Quit();
+                        };
 
-            var hb = new HeaderBar();
-            hb.ShowCloseButton = true;
-            hb.Title = "Core-Chip8 GTK#";
+                        if (debugMode)
+                        {
+                            LoadDebugEnvironment();
+                        }
 
-            var gfxDumpBtn = new Button();
-            gfxDumpBtn.Label = "Gfx";
+                        emulatorWindow.KeyPressEvent += new KeyPressEventHandler(input.KeyPressEventHandler);
+                        emulatorWindow.ShowAll();
+
+                        Thread t = new Thread(new ThreadStart(BackgroundTick));
+                        t.Start();
+
+                        Gtk.Application.Run();
+                    }
+                    catch (Exception e)
+                    {
+                        throw;
+                    }
+
+                }
+            }
+        }
+
+        private static void LoadDebugEnvironment()
+        {
+            var hb = new HeaderBar
+            {
+                ShowCloseButton = true,
+                Title = "Core-Chip8 - DEBUG MODE"
+            };
+
+            emulatorWindow.KeyPressEvent += new KeyPressEventHandler(DebugKeyPressEventHandler);
+
+            var gfxDumpBtn = new Button { Label = "Gfx" };
+
             gfxDumpBtn.Clicked += delegate (object obj, EventArgs ars)
             {
                 if (graphicsDumpWindow == null || !graphicsDumpWindow.Visible)
@@ -70,9 +124,8 @@ namespace chip8.gtkskia
             };
             hb.PackEnd(gfxDumpBtn);
 
+            var hexDumpBtn = new Button { Label = "Hex" };
 
-            var hexDumpBtn = new Button();
-            hexDumpBtn.Label = "Hex";
             hexDumpBtn.Clicked += delegate (object obj, EventArgs ars)
             {
                 if (memoryDumpWindow == null || !memoryDumpWindow.Visible)
@@ -84,8 +137,8 @@ namespace chip8.gtkskia
             };
             hb.PackEnd(hexDumpBtn);
 
-            var debuggerBtn = new Button();
-            debuggerBtn.Label = "Debug";
+            var debuggerBtn = new Button { Label = "Debug" };
+
             debuggerBtn.Clicked += delegate (object obj, EventArgs ars)
             {
                 if (debuggerWindow == null || !debuggerWindow.Visible)
@@ -97,74 +150,21 @@ namespace chip8.gtkskia
             };
             hb.PackEnd(debuggerBtn);
 
-            var window = new Window("Core-Chip8");
-            window.SetDefaultSize(640, 320);
-
-            window.SetPosition(WindowPosition.Center);
-            window.Titlebar = hb;
-            window.DeleteEvent += delegate
-            {
-                KILL_EMULATION = true;
-                Gtk.Application.Quit();
-            };
-
-            window.KeyPressEvent += new KeyPressEventHandler(KeyPress);
-
-            darea = new CustomDrawing();
-            window.Add(darea);
-            window.ShowAll();
-
-            Thread t = new Thread(new ThreadStart(BackgroundTick));
-            t.Start();
-
-            Gtk.Application.Run();
+            emulatorWindow.Titlebar = hb;
         }
 
-        [GLib.ConnectBefore]
-        private static void KeyPress(object o, KeyPressEventArgs args)
+        private static void DebugKeyPressEventHandler(object o, Gtk.KeyPressEventArgs args)
         {
-            Console.WriteLine(args.Event.Key);
-             switch(args.Event.Key) {
-                 case Gdk.Key.KP_1:
-                    input.SendKeyPress(0x01);    
-                    break;
-                 case Gdk.Key.KP_2:
-                    input.SendKeyPress(0x02);    
-                    break;
-                 case Gdk.Key.KP_3:
-                    input.SendKeyPress(0x03);    
-                    break;
-                 case Gdk.Key.KP_4:
-                    input.SendKeyPress(0x04);    
-                    break;
-                 case Gdk.Key.KP_5:
-                    input.SendKeyPress(0x05);    
-                    break;
-                 case Gdk.Key.KP_6:
-                    input.SendKeyPress(0x06);    
-                    break;
-                 case Gdk.Key.KP_7:
-                    input.SendKeyPress(0x07);    
-                    break;
-                 case Gdk.Key.KP_8:
-                    input.SendKeyPress(0x08);    
-                    break;
-                 case Gdk.Key.KP_9:
-                    input.SendKeyPress(0x09);    
-                    break;
-             }
-
-
-            if (args.Event.Key == Gdk.Key.Up)
+            switch (args.Event.Key)
             {
-                input.SendKeyPress(0x01);
-            }
+                case Gdk.Key.F10: //Step
+                    DebugControl(DebugOptions.Step);
+                    break;
+                case Gdk.Key.F5: //Play
+                    DebugControl(DebugOptions.Play);
+                    break;
 
-            if (args.Event.Key == Gdk.Key.Down)
-            {
-                input.SendKeyPress(0x04);
             }
-
         }
 
         public static void DebugControl(DebugOptions option)
@@ -181,27 +181,26 @@ namespace chip8.gtkskia
                     chp8.Tick();
                 }
 
+                emulatorWindow.UpdateScreen(graphics.Screen);
+
                 Gtk.Application.Invoke(delegate
                 {
-                    darea.ScreenData = graphics.Screen;
                     if (graphics.ScreenChanged)
                     {
                         if (graphicsDumpWindow != null && graphicsDumpWindow.Visible)
                             graphicsDumpWindow.SetGraphics(graphics.Screen);
 
-                        if (memoryDumpWindow != null && memoryDumpWindow.Visible)
-                            memoryDumpWindow.SetMemory(chp8.Memory);
-
                         graphics.ScreenChanged = false;
                     }
 
-                    if (debuggerWindow != null && debuggerWindow.Visible)
+                    if (debuggerWindow != null && debuggerWindow.Visible) {
                         debuggerWindow.SetWatchValues(chp8.PC, chp8.I, chp8.V, chp8.DelayTimer, chp8.SoundTimer);
+                    }
                 });
 
                 if (DebugState == DebugOptions.Step) { DebugState = DebugOptions.Pause; }
 
-                Thread.Sleep(5);
+                Thread.Sleep(2);
             }
         }
 

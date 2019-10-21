@@ -8,12 +8,12 @@ namespace chip8.gtkskia.Windows
     {
         private byte[] Memory;
 
-        private TextView disassemblyTextView;
-        private TextBuffer disassemblyBuffer = new TextBuffer(new TextTagTable());
+        private readonly TextView disassemblyTextView;
+        private readonly TextBuffer disassemblyBuffer = new TextBuffer(new TextTagTable());
 
-        private TextView watchTextView;
-        private TextBuffer watchBuffer = new TextBuffer(new TextTagTable());
-        private ScrolledWindow scrollWindow;
+        private readonly TextView watchTextView;
+        private readonly TextBuffer watchBuffer = new TextBuffer(new TextTagTable());
+        private readonly ScrolledWindow scrollWindow;
 
         public DebuggerWindow(string title) : base(title)
         {
@@ -22,23 +22,24 @@ namespace chip8.gtkskia.Windows
 
             this.SetSizeRequest(640, 480);
 
-            var hb = new HeaderBar();
             var hPaned = new HPaned();
 
             #region Disassembly Text View Setup
 
-            disassemblyTextView = new TextView(disassemblyBuffer);
-            disassemblyTextView.Editable = false;
-            disassemblyTextView.Monospace = true;
-            
-            scrollWindow = new ScrolledWindow();
-            scrollWindow.BorderWidth = 5;
-            scrollWindow.ShadowType = ShadowType.In;
-            scrollWindow.Add(disassemblyTextView);
-
+            disassemblyTextView = new TextView(disassemblyBuffer)
+            {
+                Editable = false,
+                Monospace = true
+            };
             CreateTags(disassemblyBuffer);
 
-            //hPaned.Add1(scrollWindow);
+            scrollWindow = new ScrolledWindow
+            {
+                BorderWidth = 5,
+                ShadowType = ShadowType.In
+            };
+            scrollWindow.Add(disassemblyTextView);
+
             hPaned.Pack1(scrollWindow, true, false);
 
             #endregion
@@ -73,10 +74,11 @@ namespace chip8.gtkskia.Windows
 
             box.PackStart(watchLabel, false, false, 2);
 
-            watchTextView = new TextView(watchBuffer);
-            watchTextView.Editable = false;
-            watchTextView.Monospace = true;
-
+            watchTextView = new TextView(watchBuffer)
+            {
+                Editable = false,
+                Monospace = true
+            };
             CreateTags(watchBuffer);
 
             box.PackStart(watchTextView, true, true, 2);
@@ -111,53 +113,67 @@ namespace chip8.gtkskia.Windows
             Gdk.RGBA backgroundColour = new Gdk.RGBA();
             backgroundColour.Parse("#272822");
 
-            TextTag tag = new TextTag("keyword");
-            tag.Weight = Pango.Weight.Normal;
-            tag.ForegroundRgba = keywordColour;
-            tag.BackgroundRgba = backgroundColour;
+            TextTag tag = new TextTag("keyword")
+            {
+                Weight = Pango.Weight.Normal,
+                ForegroundRgba = keywordColour,
+                BackgroundRgba = backgroundColour
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("variable");
-            tag.Weight = Pango.Weight.Normal;
-            tag.ForegroundRgba = variableColour;
-            tag.BackgroundRgba = backgroundColour;
+            tag = new TextTag("variable")
+            {
+                Weight = Pango.Weight.Normal,
+                ForegroundRgba = variableColour,
+                BackgroundRgba = backgroundColour
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("constant");
-            tag.Weight = Pango.Weight.Normal;
-            tag.ForegroundRgba = constantColour;
-            tag.BackgroundRgba = backgroundColour;
+            tag = new TextTag("constant")
+            {
+                Weight = Pango.Weight.Normal,
+                ForegroundRgba = constantColour,
+                BackgroundRgba = backgroundColour
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("address");
-            tag.Weight = Pango.Weight.Bold;
-            tag.ForegroundRgba = addressFgColour;
-            tag.BackgroundRgba = addressBgColour;
+            tag = new TextTag("address")
+            {
+                Weight = Pango.Weight.Bold,
+                ForegroundRgba = addressFgColour,
+                BackgroundRgba = addressBgColour
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("opCode");
-            tag.Weight = Pango.Weight.Normal;
-            tag.ForegroundRgba = opCodeColour;
-            tag.BackgroundRgba = addressBgColour;
+            tag = new TextTag("opCode")
+            {
+                Weight = Pango.Weight.Normal,
+                ForegroundRgba = opCodeColour,
+                BackgroundRgba = addressBgColour
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("white");
-            tag.Weight = Pango.Weight.Normal;
-            tag.ForegroundRgba = white;
-            tag.BackgroundRgba = backgroundColour;
+            tag = new TextTag("white")
+            {
+                Weight = Pango.Weight.Normal,
+                ForegroundRgba = white,
+                BackgroundRgba = backgroundColour
+            };
             buffer.TagTable.Add(tag);
 
 
-            tag = new TextTag("comment");
-            tag.Weight = Pango.Weight.Normal;
-            tag.Style = Pango.Style.Italic;
-            tag.ForegroundRgba = commentColour;
-            tag.BackgroundRgba = backgroundColour;
+            tag = new TextTag("comment")
+            {
+                Weight = Pango.Weight.Normal,
+                Style = Pango.Style.Italic,
+                ForegroundRgba = commentColour,
+                BackgroundRgba = backgroundColour
+            };
             buffer.TagTable.Add(tag);
         }
 
         public void HighlightOpCode(ushort address) {
-            int location = ((int)address - chip8.core.Chip8.START_PROGRAM_MEMORY) /2;
+            int location = ((int)address - chip8.core.Chip8.START_PROGRAM_MEMORY -2) /2;
 
             TextIter line = disassemblyBuffer.GetIterAtLine(location);
             TextIter eline = disassemblyBuffer.GetIterAtLine(location);
@@ -207,6 +223,10 @@ namespace chip8.gtkskia.Windows
             watchBuffer.InsertWithTagsByName(ref position, $" {SoundTimer}", "constant");
             watchBuffer.InsertWithTagsByName(ref position, $" //0x{SoundTimer:x2}", "comment");
             watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
+
+            watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
+            watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' ') + "\n", "white");
+            watchBuffer.InsertWithTagsByName(ref position, "".PadLeft(LINE_LENGTH - position.BytesInLine, ' '), "white");
         }
 
         public void SetMemory(byte[] memory)

@@ -6,23 +6,27 @@ namespace chip8.gtkskia.Windows
 {
     public class MemoryDumpWindow : Window
     {
-        private TextView memoryTextView;
-        private TextBuffer memoryDumpBuffer = new TextBuffer(new TextTagTable());
+        private readonly TextView memoryTextView;
+        private readonly TextBuffer memoryDumpBuffer = new TextBuffer(new TextTagTable());
 
         public MemoryDumpWindow(string title) : base(title)
         {
             this.SetSizeRequest(480,280);
-            var scrollWindow = new ScrolledWindow();
-            scrollWindow.BorderWidth = 5;
-            scrollWindow.ShadowType = ShadowType.In;            
+            var scrollWindow = new ScrolledWindow
+            {
+                BorderWidth = 5,
+                ShadowType = ShadowType.In
+            };
             Add(scrollWindow);
 
-            memoryTextView = new TextView(memoryDumpBuffer);
-            memoryTextView.LeftMargin = 5;
-            memoryTextView.Editable = false;
-            memoryTextView.Monospace = true;            
-            scrollWindow.Add(memoryTextView);           
+            memoryTextView = new TextView(memoryDumpBuffer)
+            {
+                LeftMargin = 5,
+                Editable = false,
+                Monospace = true
+            };                 
             CreateTags(memoryDumpBuffer);
+            scrollWindow.Add(memoryTextView);      
         }      
 
         private void CreateTags(TextBuffer buffer)
@@ -32,16 +36,20 @@ namespace chip8.gtkskia.Windows
             Gdk.RGBA white = new Gdk.RGBA();
             white.Parse("#ffffff");
 
-            TextTag tag = new TextTag("WhiteOnBlack");
-            tag.Weight = Pango.Weight.Normal;
-            tag.BackgroundRgba = black;
-            tag.ForegroundRgba = white;            
+            TextTag tag = new TextTag("WhiteOnBlack")
+            {
+                Weight = Pango.Weight.Normal,
+                BackgroundRgba = black,
+                ForegroundRgba = white
+            };
             buffer.TagTable.Add(tag);
 
-            tag = new TextTag("BlackOnWhite");
-            tag.Weight = Pango.Weight.Normal;
-            tag.BackgroundRgba = white;
-            tag.ForegroundRgba = black;            
+            tag = new TextTag("BlackOnWhite")
+            {
+                Weight = Pango.Weight.Normal,
+                BackgroundRgba = white,
+                ForegroundRgba = black
+            };
             buffer.TagTable.Add(tag);
         }
 
