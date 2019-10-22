@@ -22,7 +22,7 @@ namespace chip8.gtkskia.Services
                     screen[x, y] = false;
 
             updateScreen = true;
-            Console.Clear();
+            //Console.Clear();
         }
 
         public bool DrawSprite(byte x, byte y, byte spriteHeight, byte[] sprite)

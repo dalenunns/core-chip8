@@ -66,10 +66,17 @@ namespace chip8.gtkskia.Windows
                 Program.DebugControl(Program.DebugOptions.Play);
             };
             playButton.Label = "Play";
+            var resetButton = new Button();
+            resetButton.Clicked += delegate (object obj, EventArgs args)
+            {
+                Program.Reset();
+            };
 
+            resetButton.Label = "Reset";
             buttonBox.PackStart(pauseButton, false, true, 2);
             buttonBox.PackStart(stepButton, false, true, 2);
             buttonBox.PackStart(playButton, false, true, 2);
+            buttonBox.PackStart(resetButton, false, true, 2);
 
             box.PackStart(buttonBox, false, false, 2);
 
@@ -177,7 +184,7 @@ namespace chip8.gtkskia.Windows
 
         public void HighlightOpCode(ushort address)
         {
-            int location = ((int)address - chip8.core.Chip8.START_PROGRAM_MEMORY - 2) / 2;
+            int location = ((int)address - chip8.core.Chip8.START_PROGRAM_MEMORY) / 2;
 
             TextIter line = disassemblyBuffer.GetIterAtLine(location);
             TextIter eline = disassemblyBuffer.GetIterAtLine(location);
@@ -257,7 +264,7 @@ namespace chip8.gtkskia.Windows
                     Y = (byte)((opCode & 0x00F0) >> 4)
                 };
 
-                DissasembleOpCode(disassemblyBuffer, ref position, op, PC);
+                DissasembleOpCode(disassemblyBuffer, ref position, op, (ushort)(PC- 2));
             }
         }
 

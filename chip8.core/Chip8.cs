@@ -54,7 +54,7 @@ namespace chip8.core
 
         //Init routines to setup the default values for registers etc, set the program counter and load the fonts.
         //Needs to be called after loading a ROM image into memory
-        private void Init()
+        public void Init()
         {
             I = 0;
             StackPointer = 0;

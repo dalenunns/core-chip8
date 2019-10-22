@@ -43,7 +43,7 @@ namespace chip8.gtkskia.Services
                     SendKeyPress(0x09);
                     break;
                 default:
-                    Console.WriteLine(args.Event.Key);
+                    //Console.WriteLine(args.Event.Key);
                     break;
             }
         }

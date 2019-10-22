@@ -32,7 +32,7 @@ namespace chip8.gtkskia
                 using (var skSurface = SKSurface.Create(s, bitmap.GetPixels(out IntPtr len), bitmap.Info.RowBytes))
                 {
                     var canvas = skSurface.Canvas;
-                    canvas.Clear(SKColors.Black);
+                    //canvas.Clear(SKColors.Black);
 
                     using (var paint = new SKPaint())
                     {
