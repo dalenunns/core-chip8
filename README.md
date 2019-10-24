@@ -13,6 +13,9 @@ You'll need the dotnet tooling and then run `dotnet restore` to restore all of t
 ## chip8.core 
 Contains the core CHIP8 emulator code.
 
+## chip8.roms
+Contains some test ROMS, not all of the ROM images in the zip files will work on this emulator.
+
 ## chip8.console
 Console UI / Interface that makes use of the CHIP8 Emulator Core.
 
