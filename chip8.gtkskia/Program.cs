@@ -94,6 +94,7 @@ namespace chip8.gtkskia
                     }
                     catch (Exception e)
                     {
+                        Console.WriteLine(e);
                         throw;
                     }
 
@@ -167,10 +168,11 @@ namespace chip8.gtkskia
             }
         }
 
-public static void Reset() {
-    graphics.ClearScreen();
-    chp8.Init();
-}
+        public static void Reset()
+        {
+            graphics.ClearScreen();
+            chp8.Init();
+        }
         public static void DebugControl(DebugOptions option)
         {
             DebugState = option;
@@ -187,21 +189,22 @@ public static void Reset() {
 
                 emulatorWindow.UpdateScreen(graphics.Screen);
 
-                 
-                  Gtk.Application.Invoke(delegate
-                  {
-                      if (graphics.ScreenChanged)
-                     {
-                         if (graphicsDumpWindow != null && graphicsDumpWindow.Visible)
-                             graphicsDumpWindow.SetGraphics(graphics.Screen);
 
-                         graphics.ScreenChanged = false;
-                     }
-                 
-                     if (debuggerWindow != null && debuggerWindow.Visible) {
-                         debuggerWindow.SetWatchValues(chp8.PC, chp8.I, chp8.V, chp8.DelayTimer, chp8.SoundTimer);
-                     }
-                 });
+                Gtk.Application.Invoke(delegate
+                {
+                    if (graphics.ScreenChanged)
+                    {
+                        if (graphicsDumpWindow != null && graphicsDumpWindow.Visible)
+                            graphicsDumpWindow.SetGraphics(graphics.Screen);
+
+                        graphics.ScreenChanged = false;
+                    }
+
+                    if (debuggerWindow != null && debuggerWindow.Visible)
+                    {
+                        debuggerWindow.SetWatchValues(chp8.PC, chp8.I, chp8.V, chp8.DelayTimer, chp8.SoundTimer);
+                    }
+                });
 
                 if (DebugState == DebugOptions.Step) { DebugState = DebugOptions.Pause; }
 

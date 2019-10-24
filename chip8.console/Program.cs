@@ -29,9 +29,8 @@ namespace chip8.console
                     graphics.ClearScreen();
                     Chip8 chp8 = new Chip8(graphics, audio, input);
 
-                    //byte[] rom = LoadROMFile(@"/home/chippy/src/dotnet/core-chip8/Fishie.ch8");
                     byte[] rom = LoadROMFile(args[0]);
-                    // //LoadROM
+                    //LoadROM
                     chp8.LoadROM(rom);
 
                     Console.WriteLine("Starting Emulator");
@@ -46,6 +45,7 @@ namespace chip8.console
                     }
                     catch (Exception e)
                     {
+                        Console.WriteLine(e);
                         throw;
                     }
 
