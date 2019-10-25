@@ -6,6 +6,8 @@ _//TODO: This is still very much a work in progress_
 CHIP-8 Emulator written in .NET Core 2.2 - built as an exercise to learn the .NET Core tooling and how emulators work.  
 Mostly built based on the info on the CHIP-8 Wikipedia page (https://en.wikipedia.org/wiki/CHIP-8)
 
+You can find the slides from the accompanying talk at https://xor.co.za/talks/chip8ndale2/
+
 0-9 on the numeric keybpad as input to the game. (Note that A-F is not currently implemented.)
 
 You'll need the dotnet tooling and then run `dotnet restore` to restore all of the dependencies. 
